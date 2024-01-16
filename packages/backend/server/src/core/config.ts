@@ -1,7 +1,14 @@
 import { Module } from '@nestjs/common';
-import { Field, ObjectType, Query, registerEnumType } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  Query,
+  registerEnumType,
+  ResolveField,
+  Resolver,
+} from '@nestjs/graphql';
 
-import { DeploymentType } from '../fundamentals';
+import { Config, DeploymentType, URLHelper } from '../fundamentals';
 import { Public } from './auth';
 
 export enum ServerFeature {
@@ -63,35 +70,49 @@ export class ServerConfigType {
   @Field(() => [ServerFeature], { description: 'enabled server features' })
   features!: ServerFeature[];
 
-  @Field(() => CredentialsRequirementType, {
-    description: 'credentials requirement',
-  })
-  credentialsRequirement!: CredentialsRequirementType;
-
   @Field({ description: 'enable telemetry' })
   enableTelemetry!: boolean;
 }
 
+@Resolver(() => ServerConfigType)
 export class ServerConfigResolver {
+  constructor(
+    private readonly config: Config,
+    private readonly url: URLHelper
+  ) {}
   @Public()
   @Query(() => ServerConfigType, {
     description: 'server config',
   })
   serverConfig(): ServerConfigType {
     return {
-      name: AFFiNE.serverName,
-      version: AFFiNE.version,
-      baseUrl: AFFiNE.baseUrl,
-      type: AFFiNE.type,
+      name: this.config.serverName,
+      version: this.config.version,
+      baseUrl: this.url.home,
+      type: this.config.type,
       // BACKWARD COMPATIBILITY
       // the old flavors contains `selfhosted` but it actually not flavor but deployment type
       // this field should be removed after frontend feature flags implemented
-      flavor: AFFiNE.type,
+      flavor: this.config.type,
       features: Array.from(ENABLED_FEATURES),
-      credentialsRequirement: {
-        password: AFFiNE.auth.password,
+      enableTelemetry: this.config.metrics.telemetry.enabled,
+    };
+  }
+
+  @ResolveField(() => CredentialsRequirementType, {
+    description: 'credentials requirement',
+  })
+  async credentialsRequirement() {
+    const config = await this.config.runtime.fetchAll({
+      'auth/password.max': true,
+      'auth/password.min': true,
+    });
+
+    return {
+      password: {
+        minLength: config['auth/password.min'],
+        maxLength: config['auth/password.max'],
       },
-      enableTelemetry: AFFiNE.telemetry.enabled,
     };
   }
 }

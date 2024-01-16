@@ -1,14 +1,16 @@
+import './config';
+
 import { Global, Module } from '@nestjs/common';
 
 import { registerStorageProvider, StorageProviderFactory } from './providers';
 import { FsStorageProvider } from './providers/fs';
 
 registerStorageProvider('fs', (config, bucket) => {
-  if (!config.storage.providers.fs) {
+  if (!config.storageProviders.fs) {
     throw new Error('Missing fs storage provider configuration');
   }
 
-  return new FsStorageProvider(config.storage.providers.fs, bucket);
+  return new FsStorageProvider(config.storageProviders.fs, bucket);
 });
 
 @Global()
@@ -18,6 +20,7 @@ registerStorageProvider('fs', (config, bucket) => {
 })
 export class StorageProviderModule {}
 
+export type { StorageProviderType } from './config';
 export * from './native';
 export type {
   BlobInputType,

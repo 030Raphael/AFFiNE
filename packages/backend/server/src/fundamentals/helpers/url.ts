@@ -5,14 +5,21 @@ import { Config } from '../config';
 
 @Injectable()
 export class URLHelper {
-  redirectAllowHosts: string[];
+  private readonly redirectAllowHosts: string[];
+  readonly origin = this.config.node.dev
+    ? 'http://localhost:8080'
+    : `${this.config.server.https ? 'https' : 'http'}://${this.config.server.host}${
+        this.config.server.host === 'localhost' ||
+        this.config.server.host === '0.0.0.0'
+          ? `:${this.config.server.port}`
+          : ''
+      }`;
+
+  readonly baseUrl = `${this.origin}${this.config.server.path}`;
+  readonly home = this.baseUrl;
 
   constructor(private readonly config: Config) {
-    this.redirectAllowHosts = [this.config.baseUrl];
-  }
-
-  get home() {
-    return this.config.baseUrl;
+    this.redirectAllowHosts = [this.baseUrl];
   }
 
   stringify(query: Record<string, any>) {
@@ -21,7 +28,7 @@ export class URLHelper {
 
   link(path: string, query: Record<string, any> = {}) {
     const url = new URL(
-      this.config.baseUrl + (path.startsWith('/') ? path : '/' + path)
+      this.baseUrl + (path.startsWith('/') ? path : '/' + path)
     );
 
     for (const key in query) {
@@ -33,7 +40,7 @@ export class URLHelper {
 
   safeRedirect(res: Response, to: string) {
     try {
-      const finalTo = new URL(decodeURIComponent(to), this.config.baseUrl);
+      const finalTo = new URL(decodeURIComponent(to), this.baseUrl);
 
       for (const host of this.redirectAllowHosts) {
         const hostURL = new URL(host);

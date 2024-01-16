@@ -1,3 +1,5 @@
+import './config';
+
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 

@@ -13,6 +13,12 @@ declare type PrimitiveType =
   | null
   | undefined;
 
+declare type UnionToIntersection<T> = (
+  T extends any ? (x: T) => any : never
+) extends (x: infer R) => any
+  ? R
+  : never;
+
 declare type ConstructorOf<T> = {
   new (): T;
 };
