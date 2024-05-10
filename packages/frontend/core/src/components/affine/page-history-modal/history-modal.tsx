@@ -308,13 +308,12 @@ const PageHistoryList = ({
   onLoadMore: (() => void) | false;
   loadingMore: boolean;
 }) => {
+  const t = useAFFiNEI18N();
   const historyListByDay = useMemo(() => {
-    return historyListGroupByDay(historyList);
-  }, [historyList]);
+    return historyListGroupByDay(historyList, t);
+  }, [historyList, t]);
 
   const [collapsedMap, setCollapsedMap] = useState<Record<number, boolean>>({});
-
-  const t = useAFFiNEI18N();
 
   useLayoutEffect(() => {
     if (historyList.length > 0 && !activeVersion) {
