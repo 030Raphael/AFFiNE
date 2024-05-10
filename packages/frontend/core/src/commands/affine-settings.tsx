@@ -11,6 +11,7 @@ import type { useTheme } from 'next-themes';
 
 import { openQuickSearchModalAtom } from '../atoms';
 import type { useLanguageHelper } from '../hooks/affine/use-language-helper';
+import { mixpanel } from '../utils';
 
 export function registerAffineSettingsCommands({
   t,
@@ -38,6 +39,7 @@ export function registerAffineSettingsCommands({
       label: '',
       icon: <SettingsIcon />,
       run() {
+        mixpanel.track('quick search opened');
         const quickSearchModalState = store.get(openQuickSearchModalAtom);
 
         if (!editor) {

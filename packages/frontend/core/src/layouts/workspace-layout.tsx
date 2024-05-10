@@ -40,6 +40,7 @@ import {
 } from '../hooks/affine/use-global-dnd-helper';
 import { useNavigateHelper } from '../hooks/use-navigate-helper';
 import { useRegisterWorkspaceCommands } from '../hooks/use-register-workspace-commands';
+import { WorkbenchService } from '../modules/workbench';
 import {
   AllWorkspaceModals,
   CurrentWorkspaceModals,
@@ -113,6 +114,14 @@ export const WorkspaceLayoutInner = ({ children }: PropsWithChildren) => {
   const upgrading = useLiveData(currentWorkspace.upgrade.upgrading$);
   const needUpgrade = useLiveData(currentWorkspace.upgrade.needUpgrade$);
 
+  const workbench = useService(WorkbenchService).workbench;
+
+  const basename = useLiveData(workbench.basename$);
+
+  const currentPath = useLiveData(
+    workbench.location$.map(location => basename + location.pathname)
+  );
+
   useRegisterWorkspaceCommands();
 
   useEffect(() => {
@@ -152,6 +161,12 @@ export const WorkspaceLayoutInner = ({ children }: PropsWithChildren) => {
       activeTab: 'appearance',
       open: true,
     });
+    mixpanel.track('settings viewed', {
+      // page:
+      segment: 'navigation panel',
+      module: 'general list',
+      control: 'settings button',
+    });
   }, [setOpenSettingModalAtom]);
 
   const resizing = useAtomValue(appSidebarResizingAtom);
@@ -171,7 +186,7 @@ export const WorkspaceLayoutInner = ({ children }: PropsWithChildren) => {
     <>
       {/* This DndContext is used for drag page from all-pages list into a folder in sidebar */}
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
-        <AppContainer resizing={resizing}>
+        <AppContainer data-current-path={currentPath} resizing={resizing}>
           <Suspense fallback={<AppSidebarFallback />}>
             <RootAppSidebar
               isPublicWorkspace={false}

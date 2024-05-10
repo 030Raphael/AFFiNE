@@ -225,6 +225,9 @@ const PlanPrompt = () => {
       open: true,
       activeTab: 'plans',
     });
+    mixpanel.track('plans viewed', {
+      segment: 'doc history',
+    });
   }, [setSettingModalAtom]);
 
   const t = useAFFiNEI18N();
